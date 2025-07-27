@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Highlands Coffee App</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #f0f0f0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .phone-screen {
+            width: 320px;
+            height: 568px;
+            background: white;
+            border-radius: 25px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+            overflow: hidden;
+            position: relative;
+        }
+        .screen { display: none; width: 100%; height: 100%; }
+        .screen.active { display: block; }
+        .status-bar {
+            height: 25px; background: #C41E3A;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0 15px; font-size: 12px; color: white; font-weight: bold;
+        }
+        .app-header {
+            background: #C41E3A; height: 60px;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 15px; color: white;
+        }
+        .back-btn, .menu-btn {
+            width: 30px; height: 30px; background: none; border: none;
+            color: white; font-size: 18px; cursor: pointer;
+        }
+        .app-title { font-size: 16px; font-weight: bold; }
+        .content {
+            height: 483px; background: white; padding: 20px;
+            display: flex; flex-direction: column; align-items: center; text-align: center;
+            overflow-y: auto;
+        }
+        .home-content {
+            background: linear-gradient(180deg, #C41E3A 0%, #8B0000 100%);
+            color: white; justify-content: center;
+        }
+        .logo-big {
+            width: 120px; height: 120px; background: rgba(255,255,255,0.2);
+            border-radius: 20px; display: flex; align-items: center; justify-content: center;
+            margin-bottom: 30px; font-size: 48px; font-weight: bold;
+        }
+        .app-name { font-size: 24px; font-weight: bold; margin-bottom: 10px; }
+        .app-subtitle { font-size: 14px; opacity: 0.9; margin-bottom: 30px; }
+        .home-menu {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; margin-top: 20px;
+        }
+        .home-menu-item {
+            background: rgba(255,255,255,0.1); border-radius: 15px; padding: 15px;
+            display: flex; flex-direction: column; align-items: center; text-align: center;
+            cursor: pointer; transition: transform 0.2s;
+        }
+        .home-menu-item:hover { transform: scale(1.05); }
+        .home-menu-item span { font-size: 24px; margin-bottom: 8px; }
+        .home-menu-item div { font-size: 11px; font-weight: bold; }
+        .menu-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%;
+        }
+        .menu-item {
+            background: white; border-radius: 15px; padding: 15px;
+            display: flex; flex-direction: column; align-items: center; text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); cursor: pointer; transition: transform 0.2s;
+        }
+        .menu-item:hover { transform: scale(1.05); }
+        .menu-image {
+            width: 50px; height: 50px; background: #f5f5f5; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            color: #999; font-size: 12px; margin-bottom: 10px;
+            object-fit: cover; 
+        }
+        .menu-title { font-size: 12px; font-weight: bold; color: #333; }
+        .cart-items { width: 100%; margin-bottom: 20px; }
+        .cart-item {
+            display: flex; align-items: center; padding: 10px; border-bottom: 1px solid #eee; margin-bottom: 10px;
+        }
+        .cart-item-info { flex: 1; text-align: left; }
+        .cart-item-name { font-size: 14px; font-weight: bold; margin-bottom: 5px; }
+        .cart-item-price { font-size: 12px; color: #C41E3A; }
+        .cart-total { text-align: center; font-size: 16px; font-weight: bold; color: #C41E3A; margin-bottom: 20px; }
+        .action-buttons { display: flex; gap: 10px; width: 100%; }
+        .btn {
+            flex: 1; padding: 10px; border: none; border-radius: 20px;
+            font-size: 12px; font-weight: bold; cursor: pointer; transition: all 0.2s;
+        }
+        .btn-order { background: #C41E3A; color: white; }
+        .btn-cart { background: white; color: #C41E3A; border: 2px solid #C41E3A; }
+        .btn:hover { transform: scale(1.05); }
+        .register-form { width: 100%; max-width: 250px; }
+        .form-group { margin-bottom: 15px; text-align: left; }
+        .form-label { font-size: 12px; margin-bottom: 5px; display: block; }
+        .form-input {
+            width: 100%; padding: 10px; border: none; border-radius: 8px; font-size: 14px;
+        }
+        .register-btn {
+            width: 100%; padding: 12px; background: white; color: #C41E3A;
+            border: none; border-radius: 20px; font-size: 14px; font-weight: bold; cursor: pointer;
+        }
+        .page-image {
+            width: 100%;
+            border-radius: 10px;
+            margin: 10px 0;
+            object-fit: cover;
+        }
+        /* Modal chọn size */
+        .size-modal {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 250px;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            text-align: center;
+            z-index: 100;
+        }
+        .size-modal button {
+            width: 100%;
+            margin-top: 10px;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            background: #C41E3A;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .size-modal button:hover { background: #a10f2c; }
+        h3 { margin-bottom: 10px; }
+        p { font-size: 14px; color: #444; line-height: 1.5; margin-bottom: 10px; }
+        .menu-image{
+            margin-top: 80px;
+        }
+    </style>
+</head>
+<body>
+    <div class="phone-screen">
+        <!-- Trang chủ -->
+        <div class="screen active" id="home">
+            <div class="status-bar"><span>9:41</span><span>100% 📶</span></div>
+            <div class="app-header">
+                <button class="back-btn" onclick="goBack()">‹</button>
+                <span class="app-title">Trang chủ</span>
+                <button class="menu-btn" onclick="showScreen('menu-categories')">☰</button>
+            </div>
+            <div class="content home-content">
+                <img class="menu-image" src="/image-50.png" alt="AMERICANO">
+                <div class="app-name">HIGHLANDS COFFEE</div>
+                <div class="app-subtitle">Cà phê ngon mỗi ngày</div>
+                <div class="home-menu">
+                    <div class="home-menu-item" onclick="showScreen('menu-categories')"><span>📋</span><div>Menu</div></div>
+                    <div class="home-menu-item" onclick="showScreen('cart')"><span>🛒</span><div>Giỏ hàng</div></div>
+                    <div class="home-menu-item" onclick="showScreen('about')"><span>🏢</span><div>Giới thiệu</div></div>
+                    <div class="home-menu-item" onclick="showScreen('stores')"><span>📍</span><div>Cửa hàng</div></div>
+                    <div class="home-menu-item" onclick="showScreen('news')"><span>📰</span><div>Tin tức</div></div>
+                    <div class="home-menu-item" onclick="showScreen('contact')"><span>☎️</span><div>Liên hệ</div></div>
+                    <div class="home-menu-item" onclick="showScreen('login')"><span>👤</span><div>Đăng nhập</div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Giới thiệu -->
+        <div class="screen" id="about">
+            <div class="status-bar"><span>9:41</span><span>100% 📶</span></div>
+            <div class="app-header">
+                <button class="back-btn" onclick="goBack()">‹</button>
+                <span class="app-title">Giới thiệu</span>
+                <button class="menu-btn" onclick="showScreen('home')">🏠</button>
+            </div>
+            <div class="content">
+                <h3>Highlands Coffee</h3>
+                <img class="page-image" src="image-10.png" alt="Giới thiệu Highlands">
+                <p>Highlands Coffee là thương hiệu cà phê hàng đầu tại Việt Nam...</p>
+            </div>
+        </div>
+
+        <!-- Hệ thống cửa hàng -->
+        <div class="screen" id="stores">
+            <div class="status-bar"><span>9:41</span><span>100% 📶</span></div>
+            <div class="app-header">
+                <button class="back-btn" onclick="goBack()">‹</button>
+                <span class="app-title">Cửa hàng</span>
+                <button class="menu-btn" onclick="showScreen('home')">🏠</button>
+            </div>
+            <div class="content">
+                <h3>Hệ thống cửa hàng</h3>
+                <img class="page-image" src="image-20.png" alt="Cửa hàng Highlands">
+                <p>Hiện Highlands Coffee có hơn 300 cửa hàng...</p>
+            </div>
+        </div>
+
+        <!-- Tin tức -->
+        <div class="screen" id="news">
+            <div class="status-bar"><span>9:41</span><span>100% 📶</span></div>
+            <div class="app-header">
+                <button class="back-btn" onclick="goBack()">‹</button>
+                <span class="app-title">Tin tức</span>
+                <button class="menu-btn" onclick="showScreen('home')">🏠</button>
+            </div>
+            <div class="content">
+                <h3>Tin tức mới nhất</h3>
+                <img class="page-image" src="a-nh-chu-p-ma-n-hi-nh-2025-07-14-lu-c-22-18-25-10.png" alt="Tin tức Highlands">
+                <p>- Khuyến mãi đặc biệt: Giảm 20% cho đơn hàng online...</p>
+            </div>
+        </div>
+
+        <!-- Liên hệ -->
+        <div class="screen" id="contact">
+            <div class="status-bar"><span>9:41</span><span>100% 📶</span></div>
+            <div class="app-header">
+                <button class="back-btn" onclick="goBack()">‹</button>
+                <span class="app-title">Liên hệ</span>
+                <button class="menu-btn" onclick="showScreen('home')">🏠</button>
+            </div>
+            <div class="content">
+                <h3>Liên hệ Highlands Coffee</h3>
+                <p>Email: support@highlandscoffee.vn</p>
+                <p>Hotline: 1900 123 456</p>
+            </div>
+        </div>
+
+        <!-- Menu -->
+        <div class="screen" id="menu-categories">
+            <div class="status-bar"><span>9:41</span><span>100% 📶</span></div>
+            <div class="app-header">
+                <button class="back-btn" onclick="goBack()">‹</button>
+                <span class="app-title">Menu</span>
+                <button class="menu-btn" onclick="showScreen('cart')">🛒</button>
+            </div>
+            <div class="content">
+                <div class="menu-grid">
+                    <div class="menu-item" onclick="openSizeModal('AMERICANO', 45000, 49000)">
+                        <img class="menu-image" src="rectangle0.png" alt="AMERICANO" onerror="this.style.display='flex'; this.innerHTML='Hình ảnh';">
+                        <div class="menu-title">AMERICANO</div>
+                    </div>
+                    <div class="menu-item" onclick="openSizeModal('PHINDI CHOCO', 45000, 49000)">
+                        <img class="menu-image" src="rectangle-2-dm-10.png" alt="PHINDI CHOCO" onerror="this.style.display='flex'; this.innerHTML='Hình ảnh';">
+                        <div class="menu-title">PHINDI CHOCO</div>
+                    </div>
+                    <div class="menu-item" onclick="openSizeModal('ESPRESSO', 55000, 65000)">
+                        <img class="menu-image" src="rectangle-4-dm-10.png" alt="ESPRESSO" onerror="this.style.display='flex'; this.innerHTML='Hình ảnh';">
+                        <div class="menu-title">ESPRESSO</div>
+                    </div>
+                    <div class="menu-item" onclick="openSizeModal('LATTE', 65000, 75000)">
+                        <img class="menu-image" src="rectangle-7-dm0.png" alt="LATTE" onerror="this.style.display='flex'; this.innerHTML='Hình ảnh';">
+                        <div class="menu-title">LATTE</div>
+                    </div>
+                    <div class="menu-item" onclick="openSizeModal('CAPPUCCINO', 65000, 75000)">
+                        <img class="menu-image" src="rectangle-60.svg" alt="CAPPUCCINO" onerror="this.style.display='flex'; this.innerHTML='Hình ảnh';">
+                        <div class="menu-title">CAPPUCCINO</div>
+                    </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Giỏ hàng -->
+        <div class="screen" id="cart">
+            <div class="status-bar"><span>9:41</span><span>100% 📶</span></div>
+            <div class="app-header">
+                <button class="back-btn" onclick="goBack()">‹</button>
+                <span class="app-title">Giỏ hàng</span>
+                <button class="menu-btn" onclick="showScreen('home')">🏠</button>
+            </div>
+            <div class="content">
+                <div class="cart-items" id="cart-items"></div>
+                <div class="cart-total" id="cart-total">Tổng: 0đ</div>
+                <div class="action-buttons">
+                    <button class="btn btn-order" onclick="checkout()">Thanh toán</button>
+                    <button class="btn btn-cart" onclick="showScreen('menu-categories')">Tiếp tục mua</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Đăng nhập -->
+        <div class="screen" id="login">
+            <div class="status-bar"><span>9:41</span><span>100% 📶</span></div>
+            <div class="app-header">
+                <button class="back-btn" onclick="goBack()">‹</button>
+                <span class="app-title">Đăng nhập</span>
+                <button class="menu-btn" onclick="showScreen('home')">🏠</button>
+            </div>
+            <div class="content">
+                <img class="page-image" src="image-30.png" alt="Đăng nhập Highlands">
+                <div class="register-form">
+                    <div class="form-group"><label class="form-label">Số điện thoại</label><input class="form-input" type="tel" placeholder="Nhập số điện thoại"></div>
+                    <div class="form-group"><label class="form-label">Mật khẩu</label><input class="form-input" type="password" placeholder="Nhập mật khẩu"></div>
+                    <button class="register-btn" style="margin-top: 20px;" onclick="loginUser()">Đăng nhập</button>
+                    <button class="register-btn" style="margin-top: 10px; background: #f5f5f5;" onclick="showScreen('register')">Đăng ký</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Đăng ký -->
+        <div class="screen" id="register">
+            <div class="status-bar"><span>9:41</span><span>100% 📶</span></div>
+            <div class="app-header">
+                <button class="back-btn" onclick="goBack()">‹</button>
+                <span class="app-title">Đăng ký</span>
+                <button class="menu-btn" onclick="showScreen('home')">🏠</button>
+            </div>
+            <div class="content">
+                <img class="page-image" src="image-40.png" alt="Đăng ký Highlands">
+                <div class="register-form">
+                    <div class="form-group"><label class="form-label">Họ và tên</label><input class="form-input" type="text" placeholder="Nhập họ và tên"></div>
+                    <div class="form-group"><label class="form-label">Số điện thoại</label><input class="form-input" type="tel" placeholder="Nhập số điện thoại"></div>
+                    <div class="form-group"><label class="form-label">Mật khẩu</label><input class="form-input" type="password" placeholder="Nhập mật khẩu"></div>
+                    <button class="register-btn" onclick="registerUser()">Đăng ký</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal chọn size -->
+        <div class="size-modal" id="size-modal">
+            <h3>Chọn size cho <span id="selected-item-name"></span></h3>
+            <button id="size-m-btn"></button>
+            <button id="size-l-btn"></button>
+            <button style="background: gray;" onclick="closeSizeModal()">Hủy</button>
+        </div>
+    </div>
+
+    <script>
+        let screenHistory = ['home'];
+        let cart = [];
+        let users = [];
+        let selectedItem = null;
+
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            const target = document.getElementById(id);
+            if (target) {
+                target.classList.add('active');
+                screenHistory.push(id);
+                if (id === 'cart') renderCart();
+            }
+        }
+        function goBack() {
+            if (screenHistory.length > 1) {
+                screenHistory.pop();
+                const prev = screenHistory.pop();
+                showScreen(prev);
+            } else showScreen('home');
+        }
+        function addToCart(name, price) {
+            cart.push({ name, price });
+            alert(name + " đã thêm vào giỏ hàng!");
+        }
+        function renderCart() {
+            const container = document.getElementById('cart-items');
+            const totalEl = document.getElementById('cart-total');
+            container.innerHTML = '';
+            let total = 0;
+            cart.forEach(item => {
+                total += item.price;
+                const div = document.createElement('div');
+                div.className = 'cart-item';
+                div.innerHTML = `<div class="cart-item-info"><div class="cart-item-name">${item.name}</div><div class="cart-item-price">${item.price}đ</div></div>`;
+                container.appendChild(div);
+            });
+            totalEl.textContent = "Tổng: " + total + "đ";
+        }
+        function checkout() {
+            if (cart.length === 0) { alert("Giỏ hàng trống!"); return; }
+            let total = cart.reduce((sum, item) => sum + item.price, 0);
+            alert("Thanh toán thành công! Tổng: " + total + "đ");
+            cart = [];
+            showScreen('home');
+        }
+        function registerUser() {
+            const name = document.querySelector('#register input[type=text]').value;
+            const phone = document.querySelector('#register input[type=tel]').value;
+            const pass = document.querySelector('#register input[type=password]').value;
+            if (!name || !phone || !pass) { alert("Vui lòng nhập đầy đủ thông tin!"); return; }
+            if (users.find(u => u.phone === phone)) { alert("Số điện thoại đã tồn tại!"); return; }
+            users.push({ name, phone, pass });
+            alert("Đăng ký thành công!"); showScreen('login');
+        }
+        function loginUser() {
+            const phone = document.querySelector('#login input[type=tel]').value;
+            const pass = document.querySelector('#login input[type=password]').value;
+            const user = users.find(u => u.phone === phone && u.pass === pass);
+            if (user) { alert("Đăng nhập thành công! Xin chào " + user.name); showScreen('home'); }
+            else { alert("Sai số điện thoại hoặc mật khẩu!"); }
+        }
+        // ---- Chọn size ----
+        function openSizeModal(name, priceM, priceL) {
+            selectedItem = { name, priceM, priceL };
+            document.getElementById('selected-item-name').innerText = name;
+            document.getElementById('size-m-btn').innerText = 'Size M - ' + priceM + 'đ';
+            document.getElementById('size-l-btn').innerText = 'Size L - ' + priceL + 'đ';
+            document.getElementById('size-m-btn').onclick = function() { chooseSize('M'); };
+            document.getElementById('size-l-btn').onclick = function() { chooseSize('L'); };
+            document.getElementById('size-modal').style.display = 'block';
+        }
+        function chooseSize(size) {
+            if (!selectedItem) return;
+            let price = size === 'M' ? selectedItem.priceM : selectedItem.priceL;
+            addToCart(selectedItem.name + ' (Size ' + size + ')', price);
+            closeSizeModal();
+        }
+        function closeSizeModal() {
+            document.getElementById('size-modal').style.display = 'none';
+            selectedItem = null;
+        }
+    </script>
+</body>
+</html>
